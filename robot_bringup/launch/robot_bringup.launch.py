@@ -68,6 +68,10 @@ def generate_launch_description():
     controller_manager_timeout = ['--controller-manager-timeout', '30']
     controller_manager_node_name = ['--controller-manager', 'controller_manager']
     
+    use_sim_time = LaunchConfiguration('use_sim_time')
+    namespace = LaunchConfiguration('namespace')
+    joy_dev = LaunchConfiguration('joy_dev')
+    
     # Spawn Robot
     gz_spawn_entity = Node(
         package='ros_gz_sim',
@@ -177,6 +181,47 @@ def generate_launch_description():
         on_exit=Shutdown(),
         condition=IfCondition(use_rviz),
     )
+    
+    joy_node = Node(
+        package='joy',
+        executable='joy_node',
+        name='joy_node',
+        namespace=namespace,
+        parameters=[
+            {'use_sim_time': use_sim_time},
+            {'dev': joy_dev},
+            {'deadzone': 0.05},  # Reduced deadzone
+            {'autorepeat_rate': 20.0},
+        ],
+        output='screen'
+    )
+
+    # Teleop twist joy node - converts joystick input to cmd_vel
+    teleop_twist_joy_node = Node(
+        package='teleop_twist_joy',
+        executable='teleop_node',
+        name='teleop_twist_joy_node',
+        namespace=namespace,
+        parameters=[
+            {'use_sim_time': use_sim_time},
+            # Updated stick mapping - left stick for linear, right stick for angular
+            {'axis_linear.x': 1},        # Left stick vertical (forward/backward)
+            {'axis_linear.y': 0},        # Left stick horizontal (strafe left/right)
+            {'axis_angular.yaw': 2},     # Right stick horizontal (rotation)
+            {'scale_linear.x': 2.0},       # Linear movement speed scale
+            {'scale_linear.y': 2.0},       # Linear movement speed scale
+            {'scale_linear_turbo': 1.0}, # Turbo mode linear speed scale
+            {'scale_angular': 0.8},      # Angular movement speed scale
+            {'scale_angular_turbo': 1.5},# Turbo mode angular speed scale
+            {'enable_button': 4},        # L1/LB button for enable
+            {'enable_turbo_button': 5},  # R1/RB button for turbo
+            {'require_enable_button': False},  # Control without requiring enable button
+        ],
+        remappings=[
+            ('cmd_vel', 'cmd_vel'),
+        ],
+        output='screen'
+    )
 
     # Delay start of rviz after `joint_state_broadcaster`
     delay_rviz_after_joint_state_broadcaster_spawner = RegisterEventHandler(
@@ -215,6 +260,8 @@ def generate_launch_description():
         delay_rviz_after_joint_state_broadcaster_spawner,
         delay_mecanum_drive_controller_spawner_after_joint_state_broadcaster_spawner,
         rosbag_recorder_launch,
+        joy_node,
+        teleop_twist_joy_node
     ]
 
     return LaunchDescription(declared_arguments + nodes)
