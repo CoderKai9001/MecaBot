@@ -36,6 +36,13 @@
                             "color": "aqua",
                             "singleInstance": true,
                             "command": "rm -rf /ros2_ws/src/dep_repos && mkdir -p /ros2_ws/src/dep_repos && vcs import /ros2_ws/src/dep_repos < /ros2_ws/src/dep.repos"
+                        },
+                        {
+                            "name": " Launch with Joystick",
+                            "cwd": "/ros2_ws",
+                            "color": "purple",
+                            "singleInstance": true,
+                            "command": "source install/setup.bash && ros2 launch robot_bringup robot_with_joystick.launch.py use_rviz:=True use_sim_time:=False"
                         }
                     ]
                 }
@@ -67,7 +74,7 @@
 		"LIBGL_ALWAYS_SOFTWARE": "1" , // Needed for software rendering of opengl
         // "NVIDIA_DRIVER_CAPABILITIES": "all",
         // "NVIDIA_VISIBLE_DEVICES": "all"
-        "ROS_DOMAIN_ID": "42"
+        "ROS_DOMAIN_ID": "73"
     },
     "runArgs": [
         // RealTime

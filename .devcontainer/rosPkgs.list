@@ -31,3 +31,5 @@ pkg-config
 liblapack-dev
 libmetis-dev
 coinor-libipopt-dev
+ros-humble-joy
+ros-humble-teleop-twist-joy

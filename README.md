@@ -93,3 +93,21 @@ ROS2 Setup for MecaBot at RRC, IIIT-H
   ```
 
 Note: The README's in this repository are inspired by [this](https://github.com/TheProjectsGuy/MR21-CS7.503)
+
+
+
+BOOOM
+
+```sh
+# Launch with joystick control in simulation
+ros2 launch robot_bringup robot_with_joystick.launch.py use_rviz:=True use_sim_time:=True
+
+# Test individual components
+ros2 launch robot_bringup joystick_control.launch.py use_sim_time:=True
+
+# Make sure joystick is connected and accessible
+ls /dev/input/js*
+
+# Launch with joystick control on hardware
+ros2 launch robot_bringup robot_with_joystick.launch.py use_rviz:=True use_sim_time:=False joy_dev:=/dev/input/js0
+```
