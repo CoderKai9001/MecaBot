@@ -37,7 +37,7 @@ def generate_launch_description():
         parameters=[
             {'use_sim_time': use_sim_time},
             {'dev': joy_dev},
-            {'deadzone': 0.3},
+            {'deadzone': 0.05},  # Reduced deadzone
             {'autorepeat_rate': 20.0},
         ],
         output='screen'
@@ -51,16 +51,17 @@ def generate_launch_description():
         namespace=namespace,
         parameters=[
             {'use_sim_time': use_sim_time},
-            # Joystick mapping parameters
-            {'axis_linear.x': 1},      # Left stick vertical
-            {'axis_linear.y': 0},      # Left stick horizontal  
-            {'axis_angular.yaw': 3},   # Right stick horizontal
-            {'scale_linear': 1.0},
-            {'scale_linear_turbo': 2.0},
-            {'scale_angular': 2.0},
-            {'scale_angular_turbo': 4.0},
-            {'enable_button': 0},      # A button (Xbox) / X button (PS4)
-            {'enable_turbo_button': 1}, # B button (Xbox) / Circle button (PS4)
+            # Updated joystick mapping parameters
+            {'axis_linear.x': 1},        # Left stick vertical (forward/backward)
+            {'axis_linear.y': 0},        # Left stick horizontal (strafe left/right)
+            {'axis_angular.yaw': 2},     # Right stick horizontal (rotate) - changed from 3 to 2
+            {'scale_linear': 0.5},       # Reduced for better control
+            {'scale_linear_turbo': 1.0},
+            {'scale_angular': 1.0},
+            {'scale_angular_turbo': 2.0},
+            {'enable_button': 4},        # L1/LB button - changed from 0 to 4
+            {'enable_turbo_button': 5},  # R1/RB button - changed from 1 to 5
+            {'require_enable_button': True},  # Must hold enable button
         ],
         remappings=[
             ('cmd_vel', 'cmd_vel'),
