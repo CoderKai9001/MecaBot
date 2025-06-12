@@ -203,9 +203,9 @@ def generate_launch_description():
     )
     
     joy_node = Node(
-        package='joy',
-        executable='joy_node',
-        name='joy_node',
+        package='joy_linux',
+        executable='joy_linux_node',
+        name='joy_linux_node',
         namespace=namespace,
         parameters=[
             {'use_sim_time': use_sim_time},
