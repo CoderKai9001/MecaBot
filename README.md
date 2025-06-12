@@ -74,7 +74,7 @@ ROS2 Setup for MecaBot at RRC, IIIT-H
 - **Launch**
 
   ```bash
-  ros2 launch robot_bringup robot_bringup.launch.py use_rviz:=True use_sim_time:=False
+  ros2 launch robot_bringup robot_bringup.launch.py use_rviz:=True use_slamtoolbox:=True use_nav2:=True use_sim_time:=False use_joy:=True
   ```
   Available arguments are as follows:
 
@@ -84,6 +84,24 @@ ROS2 Setup for MecaBot at RRC, IIIT-H
   | `namespace`   | `""` (empty)  | Namespace for the launched nodes.              |
   | `record`      | `False`      | Enable recording to a rosbag.                  |
   | `use_rviz`    | `False`      | Launch RViz on startup.                        |
+  | `use_joy`    | `False`      | Use joystick control.                        |
+  | `use_slamtoolbox`    | `False`      | Launch SLAM Toolbox on startup                       |
+  | `use_nav2`    | `False`      | Launch Nav2 on startup                     |
+Individual Launching (⚠️ **_Deprecated_**: Look at Launch Args of main launch)
+- **LIDAR Launch**
+  ```bash
+    ros2 launch ld08_driver ld08.launch.py
+  ```
+
+- **SLAM-toolbox**
+  ```bash
+    ros2 launch robot_bringup online_async_launch.py
+  ```
+
+- **NAV2**
+  ```bash
+  ros2 launch robot_bringup navigation_launch.py
+  ```
 
 - **Interact**
 
@@ -91,6 +109,7 @@ ROS2 Setup for MecaBot at RRC, IIIT-H
   ```bash
   ros2 run teleop_twist_keyboard teleop_twist_keyboard
   ```
+  or make the arg `use_joy:=True` while launching when you have a Joystick Controller connected
 
 Note: The README's in this repository are inspired by [this](https://github.com/TheProjectsGuy/MR21-CS7.503)
 

@@ -39,6 +39,21 @@ def generate_launch_description():
             default_value='False',
             description='Launch RVIZ on startup'))
     declared_arguments.append(
+        DeclareLaunchArgument(
+            'use_joy',
+            default_value='False',
+            description='Use joystick control'))
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            'use_nav2',
+            default_value='False',
+            description='Launch Nav2 on startup'))
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            'use_slamtoolbox',
+            default_value='False',
+            description='Launch SLAM Toolbox on startup'))
+    declared_arguments.append(
         SetEnvironmentVariable(
             'RCUTILS_COLORIZED_OUTPUT', '1'))
 
@@ -47,6 +62,9 @@ def generate_launch_description():
     namespace = LaunchConfiguration('namespace')
     record = LaunchConfiguration('record')
     use_rviz = LaunchConfiguration('use_rviz')
+    use_joy = LaunchConfiguration('use_joy')
+    use_nav2 = LaunchConfiguration('use_nav2')
+    use_slamtoolbox = LaunchConfiguration('use_slamtoolbox')
 
     # Package Path
     package_path = get_package_share_directory('robot_bringup')
@@ -63,6 +81,8 @@ def generate_launch_description():
     
     # Set the robot controller file
     robot_controllers = PathJoinSubstitution([package_path, 'config', 'mecanum_drive_controller.yaml'])
+    slam_toolbox_config = os.path.join(get_package_share_directory("robot_bringup"),'config', 'mapper_params_online_async.yaml')
+    nav2_config = os.path.join(get_package_share_directory("robot_bringup"), 'config', 'nav2_params.yaml')
     
     # Params
     controller_manager_timeout = ['--controller-manager-timeout', '30']
@@ -250,6 +270,69 @@ def generate_launch_description():
         condition=IfCondition(record),
     )
 
+    joy_node = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [package_path, '/launch/joy.launch.py']
+        ),
+        launch_arguments={
+            'use_sim_time': use_sim_time
+        }.items(),
+        condition=IfCondition(use_joy),
+    )
+
+    rplidar_hw_if = IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                [os.path.join(get_package_share_directory('ld08_driver'),
+                              'launch', 'ld08.launch.py')]),
+        launch_arguments={
+            'use_sim_time': use_sim_time
+        }.items(),
+            condition=UnlessCondition(use_sim_time))
+    
+    slam_toolbox = IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                [os.path.join(get_package_share_directory('robot_bringup'),
+                              'launch', 'online_async_launch.py')]),
+        launch_arguments={
+            'use_sim_time': use_sim_time,
+            'slam_params_file': slam_toolbox_config,
+        }.items(),
+            condition=IfCondition(use_slamtoolbox))
+    
+    nav2 = IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                [os.path.join(get_package_share_directory('robot_bringup'),
+                              'launch', 'navigation_launch.py')]),
+        launch_arguments={
+            'use_sim_time': use_sim_time,
+            'params_file': nav2_config,
+        }.items(),
+            condition=IfCondition(use_nav2))
+
+    # Delay start of rplidar_hw_if after `mecanum_drive_controller_spawner`
+    delay_rplidar_hw_if_after_mecanum_drive_controller_spawner = RegisterEventHandler(
+        event_handler=OnProcessExit(
+            target_action=mecanum_drive_controller_spawner,
+            on_exit=[rplidar_hw_if],
+        )
+    )
+
+    # Delay start of slam_toolbox after `mecanum_drive_controller_spawner`
+    delay_slam_toolbox_after_mecanum_drive_controller_spawner = RegisterEventHandler(
+        event_handler=OnProcessExit(
+            target_action=mecanum_drive_controller_spawner,
+            on_exit=[slam_toolbox],
+        )
+    )
+
+    # Delay start of nav2 after `mecanum_drive_controller_spawner`
+    delay_nav2_after_mecanum_drive_controller_spawner = RegisterEventHandler(
+        event_handler=OnProcessExit(
+            target_action=mecanum_drive_controller_spawner,
+            on_exit=[nav2],
+        )
+    )
+
     nodes = [
         gz_spawn_entity,
         gazebo,
@@ -261,7 +344,9 @@ def generate_launch_description():
         delay_mecanum_drive_controller_spawner_after_joint_state_broadcaster_spawner,
         rosbag_recorder_launch,
         joy_node,
-        teleop_twist_joy_node
+        delay_rplidar_hw_if_after_mecanum_drive_controller_spawner,
+        delay_slam_toolbox_after_mecanum_drive_controller_spawner,
+        delay_nav2_after_mecanum_drive_controller_spawner
     ]
 
     return LaunchDescription(declared_arguments + nodes)
